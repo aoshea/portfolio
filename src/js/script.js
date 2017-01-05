@@ -1,156 +1,227 @@
-const textNodes = document.querySelectorAll('article a');
-const containerNode = document.querySelector('#container');
+const randomCols = () => (1 << Math.floor(Math.random() * 4))
 
-const imageList = [
-'http://open-foundry.com/img/of-cover-preview.jpg',
-'http://nexusinteractivearts.com/wp-content/uploads/2016/09/LED_03.jpg',
-'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Burberry_pattern.svg/335px-Burberry_pattern.svg.png',
-'http://www.mariotestino.com/wp-content/uploads/2014/10/PRESS_06-e1417802320159-1400x1126.jpg',
-'http://interactivewalks.com/wp-content/uploads/2016/08/screencapture-beyondthemap-withgoogle-com-pt-br-beyond-the-map-rio-arpoador-1470060361399-C%C3%B3pia.jpg',
-'http://www.vickyh.ch/sites/unit/_img/graph/hermes_event/hermes_1.png'
-]
+const kOptions = {
+  cols: 1,
+  rows: 1,
+  index: 1
+}
 
-const textList = Array.from(textNodes);
+var ui = {
 
-const createHandler = (index) => {
-  return () => {
-    containerNode.classList.add('image');
-    currIndex = index;
+  createHandler(index, options) {
+    return () => {
+      const containerNode = document.querySelector('#container')
+      containerNode.classList.add('image');
+
+      options.index = index
+      options.rows = options.cols = randomCols()
+    }
+  },
+
+  handleMouseLeave() {
+    const containerNode = document.querySelector('#container')
+    containerNode.classList.remove('image')
+  },
+
+  init(options) {
+    const textList = Array.from(document.querySelectorAll('article a'))
+    textList.map((e, index) => {
+      e.addEventListener('mouseenter', this.createHandler(index, options))
+      e.addEventListener('mouseleave', this.handleMouseLeave)
+    })
   }
 }
 
-const handleMouseLeave = () => {
-  containerNode.classList.remove('image');
-};
+var kaleidoscope = {
 
-textList.map((e, index) => {
-  e.addEventListener('mouseenter', createHandler(index))
-  e.addEventListener('mouseleave', handleMouseLeave)
-});
+  imageList: [
+  'https://pbs.twimg.com/profile_images/674168990382604288/FF-QBq8f_200x200.jpg',
+  'http://nexusinteractivearts.com/wp-content/uploads/2016/09/LED_03.jpg',
+  'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Burberry_haymarket.jpg/1024px-Burberry_haymarket.jpg',
+  'http://www.mariotestino.com/wp-content/uploads/2014/10/PRESS_06-e1417802320159-1400x1126.jpg', 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Rio_de_Janeiro_Brazil_slum_Pav%C3%A3ozinho_favela_December_2008.jpg/1024px-Rio_de_Janeiro_Brazil_slum_Pav%C3%A3ozinho_favela_December_2008.jpg',
+  'http://www.vickyh.ch/sites/unit/_img/graph/hermes_event/hermes_1.png'
+  ],
+  imageElements: [],
+  imagesLoaded: false,
+  loadedCount: 0,
 
-// cnavs
-let loaded = false;
+  bufferCanvas: null,
+  buffer: null,
+  canvas: null,
+  ctx: null,
+  pattern: null,
+  options: null,
 
-const canvas = document.querySelector('#canvas');
-const ctx = canvas.getContext('2d');
+  counter: 0,
+  x: 0,
+  y: 0,
+  tx: 0,
+  ty: 0,
+  rotation: 0,
+  tRotation: 0,
+  radius: 0,
 
-const TWO_PI = Math.PI * 2;
-const HALF_PI = Math.PI / 2;
-const SLICES = 48;
-const RADIUS = 250;
+  lastCols: -1,
+  lastIndex: -1,
 
-let radius = RADIUS;
+  resetPattern() {
+    this.pattern = this.buffer.createPattern(this.imageElements[this.options.index], 'repeat')
+    this.buffer.fillStyle = this.pattern
+  },
 
-const init = () => {
+  clear() {
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+  },
 
-  var pattern = ctx.createPattern(imageElements[currIndex], 'repeat');
-  ctx.fillStyle = pattern;
+  draw() {
+    let ctx = this.ctx
+    let buffer = this.buffer
+    let radius = this.radius
 
-  let slices = SLICES;
-  let step = TWO_PI / SLICES;
-  let cx = (window.innerWidth * 0.75) / 2;
-  let scale = 1;
+    if (this.lastIndex !== this.options.index) {
+      this.resetPattern()
+      this.lastIndex = this.options.index
+    }
 
-  let offsetScale = 1;
+    if (this.lastCols !== this.options.cols) {
+      this.clear()
+      this.lastCols = this.options.cols
+    }
 
-  for(let i = 0; i < slices; ++i) {
+    let slices = 16;
+    let step = (Math.PI * 2) / slices;
+    let cx = (window.innerWidth * 0.75) / 2
 
-    ctx.save();
-    ctx.translate(radius, radius);
-    ctx.rotate(i * step);
+    let i = slices
+    while(i--) {
+      let sign = i % 2 ? 1 : -1
 
-    ctx.beginPath();
-    ctx.moveTo(-0.5, -0.5);
-    ctx.arc(0, 0, radius, step * -0.5, step * 0.5);
-    ctx.lineTo(0.5, 0.5);
-    ctx.closePath();
+      buffer.save()
+      buffer.translate(radius, radius)
+      buffer.rotate(i * step)
 
-    ctx.rotate(HALF_PI);
-    ctx.scale(scale, scale);
-    ctx.scale([-1,1][i % 2], 1)
-    ctx.translate(offsetX - cx, offsetY);
-    ctx.rotate(offsetRotation);
-    ctx.scale(offsetScale, offsetScale);
+      buffer.beginPath()
+      buffer.moveTo(0, 0)
+      buffer.arc(0, 0, radius, 0, step)
+      buffer.lineTo(0, 0)
+      buffer.closePath()
 
-    ctx.fill();
-    ctx.restore();
-  }
-};
+      buffer.rotate(Math.PI / 2)
+      buffer.scale(0.5, 0.5 * sign)
+      buffer.translate(this.tx - cx, this.ty);
+      buffer.rotate(this.rotation);
 
-let currIndex = imageList.length - 1;
-const imageElements = [];
-let loadedCount = 0;
+      buffer.fill();
+      buffer.restore();
+    }
 
-imageList.map((el, i, list) => {
-  let img = new Image();
-  img.src = el;
-  img.onload = () => {
-    ++loadedCount;
+    // 1, 2, 4, 8
+    let cols = this.options.cols
+    let rows = this.options.rows
+    i = cols * rows
 
-    if (loadedCount === list.length) {
+    let size = radius * 2
+    let dsize = size / cols
 
+    while(i--) {
+
+      let col = i % cols
+      let row = Math.floor(i / cols)
+
+      let dx = col * dsize
+      let dy = row * dsize
+
+      ctx.drawImage(this.bufferCanvas, dx, dy, dsize, dsize)
+    }
+  },
+
+  update() {
+    this.counter++
+    this.tRotation = Math.sin((this.counter * 0.01))
+    this.tx += 0.1
+    let delta = this.tRotation - this.rotation
+    let theta = Math.atan2(Math.sin(delta), Math.cos(delta))
+
+    this.x += (this.tx - this.x) * 0.5
+    this.y += (this.ty - this.y) * 0.5
+
+    this.rotation += (theta - this.rotation) * 0.5
+  },
+
+  tick() {
+    requestAnimationFrame(this.tick)
+    if (!this.imagesLoaded) return
+    this.update()
+    this.draw()
+  },
+
+  handleImageEvent() {
+    this.loadedCount++
+    if (this.loadedCount === this.imageList.length) {
       let newRadius = 0;
       if (window.innerWidth > window.innerHeight) {
         newRadius = (window.innerHeight * 0.75) / 2;
       } else {
         newRadius = (window.innerWidth * 0.75) / 2;
       }
-      canvas.width = newRadius * 2;
-      canvas.height = newRadius * 2;
+      this.bufferCanvas.width = this.canvas.width = newRadius * 2;
+      this.bufferCanvas.height = this.canvas.height = newRadius * 2;
+      this.radius = newRadius;
+      this.imagesLoaded = true;
+    }
+  },
 
-      radius = newRadius;
-      loaded = true;
+  input(x, y) {
+    let dx = x
+    let dy = y
+    let hx = dx - 0.5
+    let hy = dy - 0.5
+    this.tx = hx * this.radius * -2
+    this.ty = hy * this.radius * 2
+    this.tRotation = Math.atan2(hy, hx)
+  },
+
+  handleMouseMove(e) {
+    this.input(e.pageX / window.innerWidth, e.pageY / window.innerHeight)
+  },
+
+  handleOrientation(e) {
+    console.log(e.alpha, e.beta, e.gamma) // eslint-disable-line
+
+    if (!isNaN(e.alpha)) {
+      this.input(e.beta * 0.1, e.gamma * 0.1)
+    }
+  },
+
+  init(options) {
+    this.options = options
+
+    this.handleMouseMove = this.handleMouseMove.bind(this)
+    this.handleImageEvent = this.handleImageEvent.bind(this)
+    this.handleOrientation = this.handleOrientation.bind(this)
+    this.tick = this.tick.bind(this)
+    requestAnimationFrame(this.tick)
+
+    this.bufferCanvas = document.createElement('canvas')
+    this.buffer = this.bufferCanvas.getContext('2d')
+    this.canvas = document.querySelector('#canvas')
+    this.ctx = this.canvas.getContext('2d')
+
+    this.imageList.map(el => {
+      let img = new Image()
+      img.src = el
+      img.onload = this.handleImageEvent
+      img.onerror = this.handleImageEvent
+      this.imageElements.push(img)
+    })
+
+    window.addEventListener('mousemove', this.handleMouseMove, false)
+
+    if (window.DeviceOrientationEvent) {
+      window.addEventListener('deviceorientation', this.handleOrientation)
     }
   }
-  imageElements.push(img);
-});
-
-let delta = 0;
-let theta = 0;
-let offsetX = 0;
-let offsetY = 0;
-let offsetRotation = 0;
-let count = 0;
-
-const update = () => {
-	tr = Math.sin(++count * 0.01);
-  tx += 0.1;
-
-	delta = tr - offsetRotation;
-  theta = Math.atan2(Math.sin(delta), Math.cos(delta));
-
-  offsetX += (tx - offsetX) * 0.5;
-  offsetY += (ty - offsetY) * 0.5;
-  offsetRotation += (theta - offsetRotation) * 0.5;
 }
 
-const tick = () => {
-	requestAnimationFrame(tick);
-	if (!loaded) return;
-  update();
-  init();
-}
-requestAnimationFrame(tick);
-
-let tx = 0;
-let ty = 0;
-let tr = 0;
-
-const handleMouseMove = (e) => {
-	// let cx = window.innerWidth / 2;
-  // let cy = window.innerHeight / 2;
-  let dx = e.pageX / window.innerWidth;
-  let dy = e.pageY / window.innerHeight;
-  let hx = dx - 0.5;
-  let hy = dy - 0.5;
-  tx = hx * radius * -2;
-  ty = hy * radius * 2;
-  tr = Math.atan2(hy, hx);
-}
-
-window.addEventListener('mousemove', handleMouseMove, false);
-
-
-
-
-
+ui.init(kOptions)
+kaleidoscope.init(kOptions)
