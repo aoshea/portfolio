@@ -9,12 +9,13 @@
   "scripts": {
     "csslint": "stylelint ./src/css/main.css",
     "prebuild:css": "npm run csslint",
+    "minify": "uglifyjs build/public/assets/js/script.js -c --screw-ie8 -m -o build/public/assets/js/script.min.js",
     "build:css": "postcss --use autoprefixer --autoprefixer.browsers 'last 2 versions' src/css/main.css -o  build/public/assets/css/style.css",
     "build:watchcss": "onchange 'src/css/**/*.css' -- npm run build:css",
     "jslint": "eslint ./src/js/**/*.js --cache",
     "prebuild:js": "npm run jslint",
     "build:copy": "cp src/html/index.html build/index.html",
-    "build:js": "babel src/js -d build/public/assets/js",
+    "build:js": "babel src/js -d build/public/assets/js && npm run minify",
     "build:watchjs": "onchange 'src/js/**/*.js' -- npm run build:js",
     "build:watch": "npm run build:watchjs & npm run build:watchcss",
     "build": "npm run build:copy && npm run build:js && npm run build:css",
@@ -47,7 +48,8 @@
     "onchange": "^3.0.2",
     "postcss-cli": "^2.6.0",
     "stylelint": "^7.7.1",
-    "stylelint-config-standard": "^13.0.2"
+    "stylelint-config-standard": "^13.0.2",
+    "uglifyjs": "^2.4.10"
   },
   "eslintConfig": {
     "env": {

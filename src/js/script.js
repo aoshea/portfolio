@@ -35,8 +35,8 @@ var UI = {
 var Kaleidoscope = {
 
   imageList: [
-  'https://pbs.twimg.com/profile_images/674168990382604288/FF-QBq8f_200x200.jpg',
   'http://nexusinteractivearts.com/wp-content/uploads/2016/09/LED_03.jpg',
+  'https://pbs.twimg.com/profile_images/674168990382604288/FF-QBq8f_200x200.jpg',
   'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Burberry_haymarket.jpg/1024px-Burberry_haymarket.jpg',
   'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Mario_Testino_2014.jpg/800px-Mario_Testino_2014.jpg', 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Rio_de_Janeiro_Brazil_slum_Pav%C3%A3ozinho_favela_December_2008.jpg/1024px-Rio_de_Janeiro_Brazil_slum_Pav%C3%A3ozinho_favela_December_2008.jpg',
   'http://www.vickyh.ch/sites/unit/_img/graph/hermes_event/hermes_1.png'
@@ -155,12 +155,16 @@ var Kaleidoscope = {
     this.draw()
   },
 
-  handleImageEvent() {
+  handleImageLoad() {
     this.loadedCount++
     if (this.loadedCount === this.imageList.length) {
       this.handleResize()
       this.imagesLoaded = true;
     }
+  },
+
+  handleImageError() {
+    console.error('Image could not be loaded'); // eslint-disable-line no-console
   },
 
   handleResize() {
@@ -190,8 +194,6 @@ var Kaleidoscope = {
   },
 
   handleOrientation(e) {
-    console.log(e.alpha, e.beta, e.gamma) // eslint-disable-line
-
     if (!isNaN(e.alpha)) {
       this.input(e.beta * 0.1, e.gamma * 0.1)
     }
@@ -201,7 +203,8 @@ var Kaleidoscope = {
     this.options = options
 
     this.handleMouseMove = this.handleMouseMove.bind(this)
-    this.handleImageEvent = this.handleImageEvent.bind(this)
+    this.handleImageLoad = this.handleImageLoad.bind(this)
+    this.handleImageError = this.handleImageError.bind(this)
     this.handleOrientation = this.handleOrientation.bind(this)
     this.handleResize = this.handleResize.bind(this)
     this.tick = this.tick.bind(this)
@@ -215,8 +218,8 @@ var Kaleidoscope = {
     this.imageList.map(el => {
       let img = new Image()
       img.src = el
-      img.onload = this.handleImageEvent
-      img.onerror = this.handleImageEvent
+      img.onload = this.handleImageLoad
+      img.onerror = this.handleImageError
       this.imageElements.push(img)
     })
 
