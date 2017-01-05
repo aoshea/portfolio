@@ -158,17 +158,21 @@ var Kaleidoscope = {
   handleImageEvent() {
     this.loadedCount++
     if (this.loadedCount === this.imageList.length) {
-      let newRadius = 0;
-      if (window.innerWidth > window.innerHeight) {
-        newRadius = (window.innerHeight * 0.75) / 2;
-      } else {
-        newRadius = (window.innerWidth * 0.75) / 2;
-      }
-      this.bufferCanvas.width = this.canvas.width = newRadius * 2;
-      this.bufferCanvas.height = this.canvas.height = newRadius * 2;
-      this.radius = newRadius;
+      this.handleResize()
       this.imagesLoaded = true;
     }
+  },
+
+  handleResize() {
+    let newRadius = 0;
+    if (window.innerWidth > window.innerHeight) {
+      newRadius = (window.innerHeight * 0.75) / 2;
+    } else {
+      newRadius = (window.innerWidth * 0.75) / 2;
+    }
+    this.bufferCanvas.width = this.canvas.width = newRadius * 2;
+    this.bufferCanvas.height = this.canvas.height = newRadius * 2;
+    this.radius = newRadius;
   },
 
   input(x, y) {
@@ -199,6 +203,7 @@ var Kaleidoscope = {
     this.handleMouseMove = this.handleMouseMove.bind(this)
     this.handleImageEvent = this.handleImageEvent.bind(this)
     this.handleOrientation = this.handleOrientation.bind(this)
+    this.handleResize = this.handleResize.bind(this)
     this.tick = this.tick.bind(this)
     requestAnimationFrame(this.tick)
 
@@ -216,6 +221,7 @@ var Kaleidoscope = {
     })
 
     window.addEventListener('mousemove', this.handleMouseMove, false)
+    window.addEventListener('resize', this.handleResize, false)
 
     if (window.DeviceOrientationEvent) {
       window.addEventListener('deviceorientation', this.handleOrientation)

@@ -24,10 +24,19 @@ dd,
 dt {
   margin: 0;
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: 36px;
+  font-size: 48px;
   font-weight: 900;
   color: #333;
   letter-spacing: -0.01em;
+}
+
+@media (max-width: 900px) {
+  h1,
+  h2,
+  dd,
+  dt {
+    font-size: 36px;
+  }
 }
 
 h2,
