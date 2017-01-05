@@ -6,7 +6,7 @@ const kOptions = {
   index: 1
 }
 
-var ui = {
+var UI = {
 
   createHandler(index, options) {
     return () => {
@@ -32,13 +32,13 @@ var ui = {
   }
 }
 
-var kaleidoscope = {
+var Kaleidoscope = {
 
   imageList: [
   'https://pbs.twimg.com/profile_images/674168990382604288/FF-QBq8f_200x200.jpg',
   'http://nexusinteractivearts.com/wp-content/uploads/2016/09/LED_03.jpg',
   'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Burberry_haymarket.jpg/1024px-Burberry_haymarket.jpg',
-  'http://www.mariotestino.com/wp-content/uploads/2014/10/PRESS_06-e1417802320159-1400x1126.jpg', 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Rio_de_Janeiro_Brazil_slum_Pav%C3%A3ozinho_favela_December_2008.jpg/1024px-Rio_de_Janeiro_Brazil_slum_Pav%C3%A3ozinho_favela_December_2008.jpg',
+  'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Mario_Testino_2014.jpg/800px-Mario_Testino_2014.jpg', 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Rio_de_Janeiro_Brazil_slum_Pav%C3%A3ozinho_favela_December_2008.jpg/1024px-Rio_de_Janeiro_Brazil_slum_Pav%C3%A3ozinho_favela_December_2008.jpg',
   'http://www.vickyh.ch/sites/unit/_img/graph/hermes_event/hermes_1.png'
   ],
   imageElements: [],
@@ -223,5 +223,8 @@ var kaleidoscope = {
   }
 }
 
+const ui = Object.create(UI)
 ui.init(kOptions)
+
+const kaleidoscope = Object.create(Kaleidoscope)
 kaleidoscope.init(kOptions)
