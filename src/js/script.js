@@ -3,7 +3,7 @@ const randomCols = () => (1 << Math.floor(Math.random() * 4))
 const kOptions = {
   cols: 1,
   rows: 1,
-  index: 1
+  index: 5
 }
 
 var UI = {
@@ -37,8 +37,8 @@ var Kaleidoscope = {
   imageList: [
   'http://nexusinteractivearts.com/wp-content/uploads/2016/09/LED_03.jpg',
   'https://pbs.twimg.com/profile_images/674168990382604288/FF-QBq8f_200x200.jpg',
-  'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Burberry_haymarket.jpg/1024px-Burberry_haymarket.jpg',
   'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Mario_Testino_2014.jpg/800px-Mario_Testino_2014.jpg', 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Rio_de_Janeiro_Brazil_slum_Pav%C3%A3ozinho_favela_December_2008.jpg/1024px-Rio_de_Janeiro_Brazil_slum_Pav%C3%A3ozinho_favela_December_2008.jpg',
+  'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Burberry_haymarket.jpg/1024px-Burberry_haymarket.jpg',
   'http://www.vickyh.ch/sites/unit/_img/graph/hermes_event/hermes_1.png'
   ],
   imageElements: [],
@@ -77,6 +77,8 @@ var Kaleidoscope = {
     let ctx = this.ctx
     let buffer = this.buffer
     let radius = this.radius
+
+    buffer.fillStyle = this.pattern
 
     if (this.lastIndex !== this.options.index) {
       this.resetPattern()
@@ -168,6 +170,8 @@ var Kaleidoscope = {
   },
 
   handleResize() {
+    this.clear();
+
     let newRadius = 0;
     if (window.innerWidth > window.innerHeight) {
       newRadius = (window.innerHeight * 0.75) / 2;
@@ -176,6 +180,15 @@ var Kaleidoscope = {
     }
     this.bufferCanvas.width = this.canvas.width = newRadius * 2;
     this.bufferCanvas.height = this.canvas.height = newRadius * 2;
+
+    this.canvas.style.width = this.canvas.width + 'px'
+    this.canvas.style.height = this.canvas.height + 'px'
+
+    this.canvas.width = newRadius * 4
+    this.canvas.height = newRadius * 4
+
+    this.ctx.scale(2, 2)
+
     this.radius = newRadius;
   },
 
