@@ -1,4 +1,4 @@
-const randomCols = () => (1 << Math.floor(Math.random() * 4))
+const randomCols = () => (1 << Math.floor(Math.random() * 3))
 
 const kOptions = {
   cols: 1,
