@@ -1,12 +1,12 @@
-const express = require('express');
+const express = require("express");
 const app = express();
-const http = require('http').Server(app);
+const http = require("http").Server(app);
 const port = process.env.PORT || 4000;
 
-app.use(express.static(__dirname + '/public'));
+app.use(express.static(__dirname + "/public"));
 
-app.get('/', function(req, res){
-  res.sendFile(__dirname + '/index.html');
+app.get("/", function(req, res) {
+  res.sendFile(__dirname + "/index.html");
 });
 
 // Start server
