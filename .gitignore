@@ -1,5 +1,8 @@
 node_modules
 build
+dist
 *.log
 *.swp
 .eslintcache
+.DS_Store
+.cache
