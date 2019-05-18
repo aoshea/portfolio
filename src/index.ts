@@ -1,7 +1,7 @@
-import "./styles.css";
+const sourceSize = 256;
 
 const sourceCanvas: HTMLCanvasElement = document.createElement("canvas");
-sourceCanvas.width = sourceCanvas.height = 128;
+sourceCanvas.width = sourceCanvas.height = sourceSize;
 const sourceCtx: CanvasRenderingContext2D = sourceCanvas.getContext("2d");
 const hexagonCanvas: HTMLCanvasElement = document.createElement("canvas");
 const hexagonCtx: CanvasRenderingContext2D = hexagonCanvas.getContext("2d");
@@ -9,6 +9,7 @@ const bufferCanvas: HTMLCanvasElement = document.createElement("canvas");
 const ctx: CanvasRenderingContext2D = bufferCanvas.getContext("2d");
 const canvas: HTMLCanvasElement = document.getElementById("canvas");
 const destCtx: CanvasRenderingContext2D = canvas.getContext("2d");
+destCtx.imageSmoothingEnabled = false;
 let pattern: CanvasPattern = null;
 
 let targetSize: number = 50;
@@ -37,29 +38,41 @@ function getColour(freq: number, i: number) {
   let r = Math.sin(freq * i) * width + centre;
   let g = Math.sin(freq * i + 1) * width + centre;
   let b = Math.sin(freq * i + 2) * width + centre;
-  return `rgba(${r}, ${g}, ${b}, 1)`;
+  let hex = (r << 16 | g << 8 | b).toString(16);
+  return `#${hex}`;
 }
 
 function drawSource(accel: number, ctx = sourceCtx): void {
   let n = 16;
   let max = n * n;
-  let dim = 16;
+  let dim = sourceSize / n;
   let r = Math.PI / max;
-  ctx.fillStyle = "#111";
-  ctx.fillRect(0, 0, 128, 128);
+  ctx.fillStyle = "#f0fcaa";
+  ctx.fillRect(0, 0, sourceSize, sourceSize);
   for(let i = 0; i < max; ++i) {
     let col = i % n;
     let row = parseInt(i / n, 10);
     let index = parseInt(Math.abs(Math.sin(i* accel)) * 100, 10);
     let mod = index % 3;
     ctx.save();
-    ctx.fillStyle = getColour(accel, i);
     ctx.translate(col * dim, row * dim);
-    ctx.rotate(r * i);
+    ctx.fillStyle = getColour(accel, i);
+    ctx.translate(dim/2, dim/2);
+    ctx.rotate(r*i);
+    ctx.translate(-dim/2,-dim/2);
     ctx.fillRect(0, 0, dim, dim);
     ctx.restore();
   }
-   pattern = hexagonCtx.createPattern(sourceCanvas, 'repeat');
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(sourceSize, 0);
+  ctx.lineTo(sourceSize, sourceSize);
+  ctx.lineTo(0, sourceSize);
+  ctx.closePath();
+
+  ctx.strokeStyle = 'chartreuse';
+  ctx.stroke();
+  pattern = hexagonCtx.createPattern(sourceCanvas, 'repeat');
   hexagonCtx.fillStyle = pattern;
 }
 
@@ -74,6 +87,7 @@ function triangle(a: Point, b: Point, c: Point, dir: number, ctx = hexagonCtx) {
   ctx.rotate(Math.sin(t * 0.1));
   ctx.translate(x, y);
   ctx.fill();
+  ctx.stroke();
   ctx.restore();
 }
 
@@ -132,6 +146,7 @@ function hexagonColumn(
 function draw(): void {
   // figure size
   size += (targetSize - size) * 0.5;
+  hexagonCtx.strokeStyle = "#fc0";
   hexagon(size);
   // size of hexagon
   const hexagonWidth = size * 2;
@@ -160,12 +175,17 @@ function clear(): void {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 function flush() {
+  let c = isKeyDown ? sourceCanvas : bufferCanvas;
   destCtx.drawImage(
-    isKeyDown ? sourceCanvas : bufferCanvas,
+    c,
     0,
     0,
-    bufferCanvas.width,
-    bufferCanvas.height
+    c.width,
+    c.height,
+    0,
+    0,
+    canvas.width,
+    canvas.height
   );
 }
 function resize() {
@@ -173,17 +193,14 @@ function resize() {
   // Get the device pixel ratio, falling back to 1.
   const dpr = window.devicePixelRatio || 1;
   // Get the size of the canvas in CSS pixels.
-  const vw = window.innerWidth / 1;
-  const vh = window.innerHeight / 1;
-  const dim = vw < vh ? vw / 1.5 : vh / 1.5;
-
+  const canvasRect = canvas.getBoundingClientRect();
+  const dim = canvasRect.width * dpr;
   // Give the canvas pixel dimensions of their CSS
   // size * the device pixel ratio.
-  hexagonCanvas.width = canvas.width = dim * dpr;
-  hexagonCanvas.height = canvas.height = dim * dpr;
+  bufferCanvas.width = canvas.width = dim;
+  bufferCanvas.height = canvas.height = dim;
+  // Reset fill state
   hexagonCtx.fillStyle = pattern;
-  bufferCanvas.width = canvas.width;
-  bufferCanvas.height = canvas.height;
   // Scale all drawing operations by the dpr, so you
   // don't have to worry about the difference.
   destCtx.scale(dpr, dpr);
@@ -230,7 +247,7 @@ function handleKeyUp(event: KeyboardEvent) {
   isKeyDown = false;
 }
 
-drawSource(0);
+drawSource(0.5);
 resize();
 requestAnimationFrame(tick);
 window.addEventListener("resize", resize, false);

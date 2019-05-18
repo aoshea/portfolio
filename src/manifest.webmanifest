@@ -1,0 +1,20 @@
+{
+  "short_name": "aoshea",
+  "name": "aoshea",
+  "icons": [
+    {
+      "src": "aoshea_128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "aoshea_192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "/?homescreen=1",
+  "background_color": "#fff",
+  "theme_color": "#fff",
+  "display": "standalone"
+}
