@@ -1,5 +1,6 @@
+// device pixel ratio
+const dpr = window.devicePixelRatio || 1;
 const sourceSize = 256;
-
 const sourceCanvas: HTMLCanvasElement = document.createElement("canvas");
 sourceCanvas.width = sourceCanvas.height = sourceSize;
 const sourceCtx: CanvasRenderingContext2D = sourceCanvas.getContext("2d");
@@ -7,11 +8,12 @@ const hexagonCanvas: HTMLCanvasElement = document.createElement("canvas");
 const hexagonCtx: CanvasRenderingContext2D = hexagonCanvas.getContext("2d");
 const bufferCanvas: HTMLCanvasElement = document.createElement("canvas");
 const ctx: CanvasRenderingContext2D = bufferCanvas.getContext("2d");
-const canvas: HTMLCanvasElement = document.getElementById("canvas");
+const canvas: HTMLCanvasElement = <HTMLCanvasElement>(
+  document.getElementById("canvas")
+);
 const destCtx: CanvasRenderingContext2D = canvas.getContext("2d");
 destCtx.imageSmoothingEnabled = false;
 let pattern: CanvasPattern = null;
-
 let targetSize: number = 50;
 let size: number = 0;
 let t: number = 0;
@@ -27,18 +29,13 @@ interface Point {
   y: number;
 }
 
-let mouse: Point = {
-  x: 0,
-  y: 0
-};
-
 function getColour(freq: number, i: number) {
   let width = 75;
   let centre = 180;
   let r = Math.sin(freq * i) * width + centre;
   let g = Math.sin(freq * i + 1) * width + centre;
   let b = Math.sin(freq * i + 2) * width + centre;
-  let hex = (r << 16 | g << 8 | b).toString(16);
+  let hex = ((r << 16) | (g << 8) | b).toString(16);
   return `#${hex}`;
 }
 
@@ -49,17 +46,16 @@ function drawSource(accel: number, ctx = sourceCtx): void {
   let r = Math.PI / max;
   ctx.fillStyle = "#f0fcaa";
   ctx.fillRect(0, 0, sourceSize, sourceSize);
-  for(let i = 0; i < max; ++i) {
+  for (let i = 0; i < max; ++i) {
     let col = i % n;
-    let row = parseInt(i / n, 10);
-    let index = parseInt(Math.abs(Math.sin(i* accel)) * 100, 10);
-    let mod = index % 3;
+    let row = Math.floor(i / n);
+    let index = Math.floor(Math.abs(Math.sin(i * accel)) * 100);
     ctx.save();
     ctx.translate(col * dim, row * dim);
     ctx.fillStyle = getColour(accel, i);
-    ctx.translate(dim/2, dim/2);
-    ctx.rotate(r*i);
-    ctx.translate(-dim/2,-dim/2);
+    ctx.translate(dim / 2, dim / 2);
+    ctx.rotate(r * i);
+    ctx.translate(-dim / 2, -dim / 2);
     ctx.fillRect(0, 0, dim, dim);
     ctx.restore();
   }
@@ -69,10 +65,7 @@ function drawSource(accel: number, ctx = sourceCtx): void {
   ctx.lineTo(sourceSize, sourceSize);
   ctx.lineTo(0, sourceSize);
   ctx.closePath();
-
-  ctx.strokeStyle = 'chartreuse';
-  ctx.stroke();
-  pattern = hexagonCtx.createPattern(sourceCanvas, 'repeat');
+  pattern = hexagonCtx.createPattern(sourceCanvas, "repeat");
   hexagonCtx.fillStyle = pattern;
 }
 
@@ -138,7 +131,7 @@ function hexagonColumn(
   ctx.translate(offset.x, offset.y);
   let i: number = rows;
   while (i--) {
-    ctx.drawImage(hexagonCanvas, 0, 0, w, h, 0, i * h, w, h);
+    ctx.drawImage(hexagonCanvas, 0, 0, w * dpr, h * dpr, 0, i * h, w, h);
   }
   ctx.restore();
 }
@@ -190,20 +183,16 @@ function flush() {
 }
 function resize() {
   clear();
-  // Get the device pixel ratio, falling back to 1.
-  const dpr = window.devicePixelRatio || 1;
-  // Get the size of the canvas in CSS pixels.
+  // Scale all drawing operations by the dpr
   const canvasRect = canvas.getBoundingClientRect();
   const dim = canvasRect.width * dpr;
-  // Give the canvas pixel dimensions of their CSS
-  // size * the device pixel ratio.
+  hexagonCanvas.width = dim;
+  hexagonCanvas.height = dim;
+  hexagonCtx.scale(dpr, dpr);
+  hexagonCtx.fillStyle = pattern;
   bufferCanvas.width = canvas.width = dim;
   bufferCanvas.height = canvas.height = dim;
-  // Reset fill state
-  hexagonCtx.fillStyle = pattern;
-  // Scale all drawing operations by the dpr, so you
-  // don't have to worry about the difference.
-  destCtx.scale(dpr, dpr);
+  ctx.scale(dpr, dpr);
 }
 function update() {
   t += dt;
@@ -229,15 +218,10 @@ function handleResize(event: Event) {
 }
 
 function handleMouseMove(event: MouseEvent) {
-  let dx = event.clientX - mouse.x;
-  let maxx = window.innerWidth;
-  dx /= maxx;
-  let accel = dx;
-  drawSource(event.clientX / maxx);
-  mouse = {
-    x: event.clientX,
-    y: event.clientY
-  };
+  drawSource(event.clientX / window.innerWidth);
+}
+function handleTouchMove(event: TouchEvent) {
+  drawSource(event.touches[0].clientX / window.innerWidth);
 }
 
 function handleKeyDown(event: KeyboardEvent) {
@@ -251,6 +235,7 @@ drawSource(0.5);
 resize();
 requestAnimationFrame(tick);
 window.addEventListener("resize", resize, false);
-window.addEventListener('mousemove', handleMouseMove, false);
-window.addEventListener('keydown', handleKeyDown, false);
-window.addEventListener('keyup', handleKeyUp, false);
+window.addEventListener("mousemove", handleMouseMove, false);
+window.addEventListener("keydown", handleKeyDown, false);
+window.addEventListener("touchmove", handleTouchMove, false);
+window.addEventListener("keyup", handleKeyUp, false);
