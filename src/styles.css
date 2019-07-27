@@ -50,30 +50,30 @@ body {
   font-size: 12px;
 }
 
-header {
-  height: 10%;
+header,
+footer {
+  height: 5%;
 }
 
 section {
-  height: 80%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 90%;
 }
 
 article {
-  height: 100%;
+  position: relative;
 }
 
 article:nth-of-type(2) {
   display: none;
 }
 
-footer {
-  height: 10%;
-}
-
-canvas {
-  margin: 20px;
-  width: 300px;
-  height: 300px;
+canvas#canvas canvas.underline {
+  position: absolute;
+  left: 0;
+  bottom: 0;
 }
 
 /*

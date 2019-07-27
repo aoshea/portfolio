@@ -24,6 +24,9 @@ let tx: number = 0;
 let ty: number = 0;
 let isKeyDown: boolean = false;
 
+// viewport dimensions updated after resize
+let dim;
+
 interface Point {
   x: number;
   y: number;
@@ -38,6 +41,8 @@ function getColour(freq: number, i: number) {
   let hex = ((r << 16) | (g << 8) | b).toString(16);
   return `#${hex}`;
 }
+
+let k = 0;
 
 function drawSource(accel: number, ctx = sourceCtx): void {
   let n = 16;
@@ -169,6 +174,7 @@ function clear(): void {
 }
 function flush() {
   let c = isKeyDown ? sourceCanvas : bufferCanvas;
+  destCtx.globalCompositeOperation = "source-over"; //default
   destCtx.drawImage(
     c,
     0,
@@ -180,20 +186,37 @@ function flush() {
     canvas.width,
     canvas.height
   );
+
+  destCtx.fillStyle = "#fff"; //color doesn't matter, but we want full opacity
+  destCtx.globalCompositeOperation = "destination-in";
+  destCtx.beginPath();
+
+  let ax = dim * 0.5;
+  destCtx.arc(ax, ax, ax, Math.PI * 2, 0, true);
+  destCtx.closePath();
+  destCtx.fill();
 }
+
 function resize() {
   clear();
   // Scale all drawing operations by the dpr
-  const canvasRect = canvas.getBoundingClientRect();
-  const dim = canvasRect.width * dpr;
-  hexagonCanvas.width = dim;
-  hexagonCanvas.height = dim;
+  let vw = window.innerWidth;
+  let vh = window.innerHeight;
+  let canvasRect = {
+    width: vw > vh ? vw * 0.25 : vh * 0.25,
+    height: vw > vh ? vw * 0.25 : vh * 0.25
+  };
+
+  dim = canvasRect.width * dpr;
+  hexagonCanvas.width = bufferCanvas.width = canvas.width = dim;
+  hexagonCanvas.height = bufferCanvas.height = canvas.height = dim;
   hexagonCtx.scale(dpr, dpr);
   hexagonCtx.fillStyle = pattern;
-  bufferCanvas.width = canvas.width = dim;
-  bufferCanvas.height = canvas.height = dim;
+  canvas.style.width = canvasRect.width + "px";
+  canvas.style.height = canvasRect.height + "px";
   ctx.scale(dpr, dpr);
 }
+
 function update() {
   t += dt;
   tx += 10 * dt;
@@ -225,7 +248,7 @@ function handleTouchMove(event: TouchEvent) {
 }
 
 function handleKeyDown(event: KeyboardEvent) {
-  isKeyDown = true;
+  isKeyDown = event.keyCode === 13;
 }
 function handleKeyUp(event: KeyboardEvent) {
   isKeyDown = false;
