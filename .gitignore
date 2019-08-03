@@ -6,3 +6,4 @@ dist
 .eslintcache
 .DS_Store
 .cache
+.htaccess
