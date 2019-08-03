@@ -24,8 +24,17 @@ let tx: number = 0;
 let ty: number = 0;
 let isKeyDown: boolean = false;
 
+// mouse/touch
+let mx = 0;
+let tmx = 0;
+let m = 0;
+let prevm = 0;
+
 // viewport dimensions updated after resize
 let dim;
+
+// anchor canvases
+const anchorCanvases: CanvasRenderingContext2D[] = [];
 
 interface Point {
   x: number;
@@ -142,6 +151,7 @@ function hexagonColumn(
 }
 
 function draw(): void {
+  m !== prevm && drawSource(m);
   // figure size
   size += (targetSize - size) * 0.5;
   hexagonCtx.strokeStyle = "#fc0";
@@ -166,6 +176,19 @@ function draw(): void {
       rows
     );
   }
+  anchorCanvases.forEach(c => {
+    c.fillStyle = pattern;
+    c.beginPath();
+    c.moveTo(0, 0);
+    c.lineTo(c.canvas.width, 0);
+    c.lineTo(c.canvas.width, c.canvas.height);
+    c.lineTo(0, c.canvas.height);
+    c.closePath();
+    c.save();
+    c.translate(tx, tx);
+    c.fill();
+    c.restore();
+  });
 }
 function clear(): void {
   hexagonCtx.clearRect(0, 0, hexagonCanvas.width, hexagonCanvas.height);
@@ -203,8 +226,8 @@ function resize() {
   let vw = window.innerWidth;
   let vh = window.innerHeight;
   let canvasRect = {
-    width: vw > vh ? vw * 0.25 : vh * 0.25,
-    height: vw > vh ? vw * 0.25 : vh * 0.25
+    width: vw > vh ? vw * 0.38 : vh * 0.38,
+    height: vw > vh ? vw * 0.38 : vh * 0.38
   };
 
   dim = canvasRect.width * dpr;
@@ -222,6 +245,12 @@ function update() {
   tx += 10 * dt;
   x += (tx - x) * 0.05;
   y += (ty - y) * 0.05;
+
+  if (m !== prevm) {
+    prevm = m;
+  }
+  mx += (tmx - mx) * 0.05;
+  m = Math.round(mx * 100);
 }
 
 function tick() {
@@ -241,10 +270,10 @@ function handleResize(event: Event) {
 }
 
 function handleMouseMove(event: MouseEvent) {
-  drawSource(event.clientX / window.innerWidth);
+  tmx = event.clientX / window.innerWidth;
 }
 function handleTouchMove(event: TouchEvent) {
-  drawSource(event.touches[0].clientX / window.innerWidth);
+  tmx = event.touches[0].clientX / window.innerWidth;
 }
 
 function handleKeyDown(event: KeyboardEvent) {
@@ -254,7 +283,32 @@ function handleKeyUp(event: KeyboardEvent) {
   isKeyDown = false;
 }
 
+function underlineAnchors() {
+  const anchors: HTMLAnchorElement[] = Array.from(
+    document.querySelectorAll<HTMLAnchorElement>("a")
+  );
+
+  let id: Number = 0;
+
+  function createAnchorUnderline(el: HTMLAnchorElement) {
+    const canvas: HTMLCanvasElement = <HTMLCanvasElement>(
+      document.createElement("canvas")
+    );
+    const ctx: CanvasRenderingContext2D = canvas.getContext("2d");
+    const rect: ClientRect = el.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = 2;
+    canvas.classList.add("underline");
+    ctx.fillStyle = pattern;
+    el.appendChild(canvas);
+    anchorCanvases.push(ctx);
+  }
+
+  anchors.forEach(createAnchorUnderline);
+}
+
 drawSource(0.5);
+underlineAnchors();
 resize();
 requestAnimationFrame(tick);
 window.addEventListener("resize", resize, false);
