@@ -151,7 +151,7 @@ function hexagonColumn(
 }
 
 function draw(): void {
-  m !== prevm && drawSource(m);
+  //m !== prevm && drawSource(m);
   // figure size
   size += (targetSize - size) * 0.5;
   hexagonCtx.strokeStyle = "#fc0";
@@ -307,7 +307,7 @@ function underlineAnchors() {
   anchors.forEach(createAnchorUnderline);
 }
 
-drawSource(0.5);
+drawSource(0.6);
 underlineAnchors();
 resize();
 requestAnimationFrame(tick);
